@@ -2,14 +2,14 @@
 
 **This is not a framework.**
 
-It is proof that you don't need one: a ~15KB kernel — an IR walker, bytecode-style
+It is proof that you don't need one: a ~27KB kernel — an IR walker, bytecode-style
 expressions, delegated events — and your plain HTML behaves like it has a framework.
 No build step. No node_modules. No virtual DOM. **No `eval`, ever.**
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@kitwork/kitjs@1"></script>
 
-<section data-kitwork-hydrate="v1.0.0">
+<section data-kit-app="runtime@v1.0.0">
   <button data-kit-click="n = n + 1">+1</button>
   <b data-kit-text="n * qty">0</b>
   <input type="number" data-kit-model="qty" value="2">
@@ -32,7 +32,7 @@ markup, watch it run in an isolated frame, and inspect the compiled IR for every
 | Two-way input | `data-kit-model="qty"` | scope ⇄ input, typed (`number` inputs coerce) |
 | Validation UX | `data-kit-validate="password.length >= 6 && confirm == password"` | element gets `data-state="valid|invalid"` for CSS; invalid forms don't submit |
 | Live / realtime | `data-kit-live="/any/sse/endpoint"` | SSE JSON patches merge into scope → re-render. One connection per URL no matter how many regions subscribe; auto-closed when the last subscriber leaves the DOM |
-| SPA navigation | a `[data-kitwork-hydrate]` region (or `<main>`) | same-origin links & GET forms are fetched and **morphed** in place — focus, cursor, scroll and input state survive. History, scroll restore, hover prefetch included |
+| SPA navigation | a `[data-kit-app]` region (or `<main>`) | same-origin links & GET forms are fetched and **morphed** in place — focus, cursor, scroll and input state survive. History, scroll restore, hover prefetch included |
 | Verbs | `kitwork.behavior("copy", (el, e) => …)` + `data-kitwork-action="copy"` | your own registered behaviors ride the same kernel |
 
 Leak-free by architecture: nodes carry **no listeners and no closures** (everything is
@@ -40,7 +40,7 @@ delegated), per-element state hides behind a `Symbol` and dies with its node, SS
 streams are reference-counted against the DOM. Removing markup cleans up after itself
 — there is nothing to unbind.
 
-Works in every evergreen browser. `~15KB` minified, `~6KB` gzipped, one file you can
+Works in every evergreen browser. `~27KB` minified, `~7KB` gzipped, one file you can
 read end to end.
 
 ## The other half — Kitwork
@@ -71,6 +71,7 @@ the canonical `data-kitwork-*`.
 
 | Attribute | Value |
 |---|---|
+| `data-kit-app` | region app initialization (`"[mode]@[version]"`). Enables SPA navigation unless `="false"` on child links/forms |
 | `data-kit-text` | expression → `textContent` |
 | `data-kit-show` | expression → element hidden when falsy |
 | `data-kit-click` | expression, run on click |
@@ -78,8 +79,14 @@ the canonical `data-kitwork-*`.
 | `data-kit-validate` | expression → `data-state="valid\|invalid"` + submit gate |
 | `data-kit-live` | SSE URL pushing JSON scope patches (into the page scope) |
 | `data-kit-scope` | names a component boundary — state inside is local |
-| `data-kitwork-action` | name of a registered behavior (verb) |
-| `data-kitwork-hydrate` | on a region: enables SPA navigation; `="false"` on a link/form opts it out |
+| `data-kit-remember` | space-separated scope keys saved to/loaded from `localStorage` |
+| `data-kit-indexed` | `"true"` to enable IndexedDB persistence/caching for lazy-loaded CDN components |
+| `data-kit-api` | JSON endpoint URL to load boundary scope data dynamically on mount (with `data-state="loading\|ready\|error"`) |
+| `data-kit-trigger` | `"visible"` to fire registered action when element is visible in viewport |
+| `data-kit-component` | name of a registered component template to hydrate |
+| `data-kit-key` | stable identifier key used to speed up and stabilize morph matching (equivalent to `data-key`) |
+| `data-kit-action` | name of a registered behavior (verb) |
+
 
 ### Scopes
 
@@ -129,10 +136,11 @@ the declarative model by design.
 
 The expression grammar: numbers, strings (`'single-quoted'`), booleans, `null`,
 variables, `+ - * / %`, comparisons, `&& || !`, ternary `? :`, assignment `=` (to a
-variable, or to the page scope via `$.key = …`), member access and method calls
-(`price.toFixed(2)`, `email.includes('@')`).
+variable, or to the page scope via `$.key = …`), member access, method calls
+(`price.toFixed(2)`, `email.includes('@')`), array literals `[1, 2]`, object literals `{ x: 1 }`, arrow function lambdas `(item) => item.id`, and statement sequences separated by semicolons `expr1; expr2`.
 That's all of it — **the grammar is closed**. Precompiled pages may instead carry
 `data-kitwork-*-ir` attributes (the compiled form); the kernel reads both.
+
 
 ## Contributing
 
@@ -143,12 +151,7 @@ That's all of it — **the grammar is closed**. Precompiled pages may instead ca
 - `dist/` is **generated** from the Kitwork engine (the single source of truth) —
   see [BUILDING.md](BUILDING.md). Don't edit dist files by hand.
 
-## Lineage
-
-kitjs is the evolution of [`@kitmodule/kitjs`](https://www.npmjs.com/package/@kitmodule/kitjs)
-— the `data-kit-*` attributes carry its namespace forward. Same author, same goal,
-one big idea later: *the parser belongs to the server.*
-
 ## License
 
 [MIT](LICENSE) © Huỳnh Nhân Quốc — Kitwork
+
