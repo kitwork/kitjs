@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tags Input - KitJS Example</title>
+  <script src="https://unpkg.com/@kitmodule/kitjs"></script>
+</head>
+<body>
+  <div data-kit-scope="tags">
+    <h2>Tags Input</h2>
+
+    <div>
+      <span data-kit-for="(tag, i) of tags">
+        <span data-kit-bind="tag"></span>
+        <button data-kit-click="remove(i)">x</button>
+      </span>
+
+      <input
+        placeholder="Add a tag and press Enter"
+        data-kit-model="newTag"
+        data-kit-keydown:enter="add()"
+      />
+    </div>
+
+    <p>Total tags: <span data-kit-bind="tags.length"></span></p>
+  </div>
+
+  <script>
+    Kit.define("tags", {
+      newTag: "",
+      tags: [],
+      add() {
+        const tag = this.newTag.trim()
+        if (!tag || this.tags.includes(tag)) return
+        this.tags.push(tag)
+        this.newTag = ""
+      },
+      remove(i) {
+        this.tags.splice(i, 1)
+      }
+    })
+  </script>
+</body>
+</html>

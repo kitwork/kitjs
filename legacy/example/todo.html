@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo — KitJS Example</title>
+  <script src="https://unpkg.com/@kitmodule/kitjs"></script>
+</head>
+<body>
+  <div data-kit-scope="todo">
+    <h2>Todo List</h2>
+
+    <input
+      data-kit-model="newTask"
+      data-kit-keydown:enter="add()"
+      placeholder="Type a task and press Enter"
+    />
+    <button data-kit-click="add()">Add</button>
+
+    <ul>
+      <li data-kit-for="(item, i) of todos">
+        <input type="checkbox" data-kit-model="item.completed" />
+        <span data-kit-bind="item.text"></span>
+        <button data-kit-click="remove(i)">x</button>
+      </li>
+    </ul>
+
+    <div>
+      Completed: <span data-kit-bind="completeds"></span> /
+      Total: <span data-kit-bind="todos.length"></span>
+    </div>
+  </div>
+
+  <script>
+    Kit.define("todo", {
+      newTask: "",
+      todos: [],
+      add() {
+        if (!this.newTask.trim()) return;
+        this.todos.unshift({
+          id: Math.random(),
+          text: this.newTask,
+          completed: false
+        });
+        this.newTask = "";
+      },
+      remove(i) {
+        this.todos.splice(i, 1);
+      },
+      get completeds() {
+        return this.todos.filter(todo => todo.completed).length;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dropdown - KitJS Example</title>
+  <script src="https://unpkg.com/@kitmodule/kitjs"></script>
+</head>
+<body>
+  <div data-kit-scope="dropdown">
+    <button data-kit-click="toggle()">Toggle Menu</button>
+
+    <ul data-kit-show="open">
+      <li><button data-kit-click="select('Home')">Home</button></li>
+      <li><button data-kit-click="select('Profile')">Profile</button></li>
+      <li><button data-kit-click="select('Settings')">Settings</button></li>
+    </ul>
+
+    <p>Selected: <span data-kit-bind="selected"></span></p>
+  </div>
+
+  <script>
+    Kit.define("dropdown", {
+      open: false,
+      selected: "None",
+      toggle() { this.open = !this.open },
+      select(name) {
+        this.selected = name
+        this.open = false
+      },
+    })
+  </script>
+</body>
+</html>

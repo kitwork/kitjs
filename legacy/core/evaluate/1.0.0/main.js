@@ -1,0 +1,224 @@
+(function (global) {
+    const kitmodule = global.kitmodule || (global.kitmodule = {});
+    const { sanitizeHTML: kitSanitize } = kitmodule;
+
+    const types = {
+        Program: "Program",
+        Literal: "Literal",
+        Identifier: "Identifier",
+        UnaryExpression: "UnaryExpression",
+        BinaryExpression: "BinaryExpression",
+        AssignmentExpression: "AssignmentExpression",
+        MemberExpression: "MemberExpression",
+        CallExpression: "CallExpression",
+        NewExpression: "NewExpression",
+        ConditionalExpression: "ConditionalExpression",
+        UpdateExpression: "UpdateExpression",
+    };
+
+    const constants = {
+        TRUE: true,
+        FALSE: false,
+        NULL: null,
+        UNDEFINED: undefined,
+        NAN: NaN,
+        INFINITY: Infinity
+    };
+
+    const builtins = {
+        Math, Date, Array, Object, Number, String, Boolean, JSON, RegExp,
+        Map, Set, WeakMap, WeakSet,
+        Error, TypeError, RangeError, Promise
+    };
+
+    const funcs = {
+        console: {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console),
+            info: console.info.bind(console),
+            table: console.table?.bind(console),
+            dir: console.dir?.bind(console),
+            clear: console.clear?.bind(console)
+        },
+        alert: (msg) => typeof msg === 'string' && window.alert(kitSanitize(msg)),
+        confirm: (msg) => typeof msg === 'string' && window.confirm(kitSanitize(msg)),
+        prompt: window.prompt.bind(window),
+        setTimeout: window.setTimeout.bind(window),
+        setInterval: window.setInterval.bind(window),
+        clearTimeout: window.clearTimeout.bind(window),
+        clearInterval: window.clearInterval.bind(window),
+        parseInt, parseFloat, isNaN, isFinite,
+        encodeURI, decodeURI, encodeURIComponent, decodeURIComponent,
+        escape, unescape
+    };
+
+    const utilities = {
+        // String utilities
+        toUpperCase: (str) => typeof str === 'string' ? str.toUpperCase() : str,
+        toLowerCase: (str) => typeof str === 'string' ? str.toLowerCase() : str,
+        trim: (str) => typeof str === 'string' ? str.trim() : str,
+        slice: (str, start, end) => typeof str === 'string' ? str.slice(start, end) : str,
+        // Math utilities
+        random: () => Math.random(),
+        round: (n) => typeof n === 'number' ? Math.round(n) : n,
+        floor: (n) => typeof n === 'number' ? Math.floor(n) : n,
+        ceil: (n) => typeof n === 'number' ? Math.ceil(n) : n,
+        max: Math.max,
+        min: Math.min,
+        abs: Math.abs
+    };
+
+    // Safe globals, chỉ cho phép gọi những function được định nghĩa
+    const safeGlobals = {
+        ...builtins,
+        ...funcs,
+        ...utilities,
+        self: { ...builtins, ...funcs, ...utilities }
+    };
+
+    const operators = {
+        binary: {
+            "===": (a, b) => a === b,
+            "!==": (a, b) => a !== b,
+            "==": (a, b) => a == b,
+            "!=": (a, b) => a != b,
+            ">": (a, b) => a > b,
+            "<": (a, b) => a < b,
+            ">=": (a, b) => a >= b,
+            "<=": (a, b) => a <= b,
+            "+": (a, b) => a + b,
+            "-": (a, b) => a - b,
+            "*": (a, b) => a * b,
+            "/": (a, b) => a / b,
+            "%": (a, b) => a % b,
+            "&&": (a, b) => a && b,
+            "||": (a, b) => a || b,
+        },
+        unary: {
+            "!": a => !a,
+            "+": a => +a,
+            "-": a => -a,
+            "~": a => ~a,
+        }
+    };
+
+    function kitEvaluate(ast, state = {}, context = {}) {
+        function getFromContext(name) {
+
+            if (constants.hasOwnProperty(name.toUpperCase())) return constants[name.toUpperCase()];
+            if (safeGlobals.hasOwnProperty(name)) return safeGlobals[name];
+            if (context.hasOwnProperty(name)) return context[name];
+            if (state.hasOwnProperty(name)) return state[name];
+            return undefined;
+        }
+
+        function evalNode(node) {
+    
+
+            switch (node.type) {
+                case types.Program:
+                    let last;
+                    for (const expr of node.body) last = evalNode(expr);
+                    return last;
+
+                case types.Literal:
+                    return node.value;
+
+                case types.UpdateExpression: {
+                    let oldValue = evalNode(node.argument);
+                    let newValue = node.operator === '++' ? oldValue + 1 : oldValue - 1;
+                    assign(evalNode, node.argument, newValue);
+                    return node.prefix ? newValue : oldValue;
+                }
+
+                case types.Identifier:
+                    return getFromContext(node.name);
+
+                case types.UnaryExpression:
+                    return operators.unary[node.operator](evalNode(node.argument));
+
+                case types.BinaryExpression:
+                    return operators.binary[node.operator](evalNode(node.left), evalNode(node.right));
+
+                case types.AssignmentExpression:
+                    return assign(evalNode, node.left, evalNode(node.right));
+
+                case types.MemberExpression: {
+                    // Nếu property lại là UpdateExpression => nghĩa là parser build sai AST
+                    if (node.property.type === types.UpdateExpression) {
+                        const obj = evalNode(node.object);
+                        if (obj == null) throw new Error(`Cannot read property of ${obj}`);
+
+                        const prop = node.property.argument.name;
+                        const oldVal = obj[prop];
+                        const newVal = node.property.operator === '++' ? oldVal + 1 : oldVal - 1;
+                        obj[prop] = newVal;
+
+                        return node.property.prefix ? newVal : oldVal;
+                    }
+
+                    // Trường hợp MemberExpression bình thường
+                    const obj = evalNode(node.object);
+                    if (obj == null) throw new Error(`Cannot read property of ${obj}`);
+                    const prop = node.computed ? evalNode(node.property) : node.property.name;
+                    return obj[prop];
+                }
+
+
+                case types.CallExpression: {
+                    const calleeNode = node.callee;
+                    let fn, thisArg;
+
+                    if (calleeNode.type === types.MemberExpression) {
+                        thisArg = evalNode(calleeNode.object);
+                        const prop = calleeNode.computed ? evalNode(calleeNode.property) : calleeNode.property.name;
+                        fn = thisArg?.[prop];
+                    } else {
+                        fn = evalNode(calleeNode);
+                        thisArg = context?.this || null;
+                    }
+
+                    if (typeof fn !== "function") throw new Error("CallExpression: callee is not a function");
+
+                    const args = node.arguments.map(evalNode);
+                    return fn.apply(thisArg, args);
+                }
+
+                case types.NewExpression: {
+                    const ctor = evalNode(node.callee);
+                    if (typeof ctor !== "function") throw new Error("NewExpression: callee is not a constructor");
+                    const args = node.arguments.map(evalNode);
+                    return new ctor(...args);
+                }
+
+                case types.ConditionalExpression:
+                    return evalNode(node.test) ? evalNode(node.consequent) : evalNode(node.alternate);
+
+                default:
+                    throw new Error(`Unknown AST node type: ${node.type}`);
+            }
+        }
+
+        function assign(evalNode, target, value) {
+
+            if (target.type === types.Identifier) {
+                state[target.name] = value;
+                return value;
+            }
+            if (target.type === types.MemberExpression) {
+                const obj = evalNode(target.object);
+                if (obj == null) throw new Error(`Cannot set property of ${obj}`);
+                const prop = target.computed ? evalNode(target.property) : target.property.name;
+                obj[prop] = value;
+                return value;
+            }
+            throw new Error("Invalid assignment target");
+        }
+
+        return evalNode(ast);
+    }
+
+    kitmodule.evaluate = kitEvaluate;
+
+})(typeof window !== "undefined" ? window : globalThis);

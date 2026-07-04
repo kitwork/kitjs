@@ -1,0 +1,1 @@
+Kit.define("dropdown", { open: false })

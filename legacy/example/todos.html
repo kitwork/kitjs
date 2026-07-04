@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kit JS - Todo List Example</title>
+
+    <style>
+        [data-kit-for] {
+            display: none;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        /* Mặc định trên desktop */
+        .size-mobile {
+            background: #fff;
+            padding: 24px 0;
+            min-width: 600px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ✅ Khi màn hình nhỏ hơn hoặc bằng 600px (mobile) → co lại 360px */
+        @media (max-width: 600px) {
+            .size-mobile {
+                min-width: unset;
+                width: 360px;
+            }
+
+            body {
+                padding: 16px;
+            }
+        }
+
+        /* ✅ Khi màn hình nhỏ hơn hoặc bằng 360px → full chiều rộng */
+        @media (max-width: 360px) {
+            .size-mobile {
+                width: 100%;
+                max-width: 360px;
+                box-shadow: none;
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div data-kit-scope="$todo" class="size-mobile">
+
+        <h1 style="padding: 12px 0; font-size: 24px; text-transform: capitalize;">
+            Danh sách việc cần làm
+        </h1>
+
+        <div style="display: flex; gap: 12px; padding: 0 24px;">
+            <input onkeydown="if (event.key === 'Enter') kit.$todo.add()"
+                style="flex: 1; background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 9px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 16px;"
+                data-focus-class="border-info" type="text" placeholder="Thêm việc cần làm" data-kit-model="todo">
+
+            <button hidden
+                style="background: #0d6efd; border: none; color: white; border-radius: 8px; padding: 9px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer;"
+                data-kit-event="click:add()">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <div style="padding: 24px; display: flex; flex-direction: column; gap: 9px;">
+            <div style="display: flex; background: #fafafa; padding: 6px 12px; text-align: left; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
+                data-kit-for="let (item, index) of todos ;id as $key">
+
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                        <input type="checkbox" data-kit-model="item.completed">
+                        <div data-kit-bind="text:$item.todo"
+                            data-kit-style="text-decoration: $item.completed ? 'line-through' : 'none'">
+                        </div>
+                    </div>
+
+                    <button
+                        style="border: none; background: transparent; color: #dc3545; border-radius: 6px; padding: 6px 9px; cursor: pointer; transition: background 0.2s;"
+                        onmouseover="this.style.background='rgba(220,53,69,0.05)'"
+                        onmouseout="this.style.background='transparent'" data-kit-event="click:del(index)">
+                        xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding: 12px 24px; text-align: left;">
+            <span data-kit-bind="completeds">0</span>
+            <span>/</span>
+            <span data-kit-bind="text:todos.length">0</span>
+            số việc đã hoàn thành
+        </div>
+    </div>
+
+    <script src="//unpkg.com/@kitmodule/kitjs"></script>
+
+    <script>
+        Kit.define("todo", {
+            todo: "",
+            todos: [],
+            add() {
+                if (this.todo.trim() === "") {
+                    alert("Việc làm không được để trống");
+                    return;
+                }
+                this.todos.unshift({
+                    id: Math.random(),
+                    todo: this.todo,
+                    completed: false
+                });
+                this.todo = "";
+            },
+
+            del(index) {
+                if (index !== -1) {
+                    this.todos.splice(index, 1);
+                }
+            },
+
+            get completeds() {
+                return this.todos.filter(todo => todo.completed).length;
+            }
+        });
+    </script>
+</body>
+
+</html>

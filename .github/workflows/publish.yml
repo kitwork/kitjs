@@ -1,0 +1,60 @@
+# .github/workflows/publish.yml
+name: Publish KitJS to NPM
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # nếu dùng GitHub Packages
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -------------------------------------------------
+      # 1. Lấy version từ tag (v1.2.3 → 1.2.3)
+      # -------------------------------------------------
+      - name: Extract version from tag
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}               # bỏ tiền tố v
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # -------------------------------------------------
+      # 2. Cập nhật package.json (nếu chưa đúng)
+      # -------------------------------------------------
+      - name: Sync package.json version
+        run: |
+          npm version ${{ steps.tag.outputs.version }} --no-git-tag-version
+
+      # -------------------------------------------------
+      # 3. Setup Node + cache
+      # -------------------------------------------------
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # -------------------------------------------------
+      # 4. Publish
+      # -------------------------------------------------
+      - name: Publish to NPM
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,26 @@
+{
+    "name": "@kitmodule/kitjs",
+    "version": "0.0.0",
+    "description": "A lightweight JavaScript framework that hydrates static or server-rendered HTML while enhancing the DOM’s natural interactivity.",
+    "main": "dist/kit.js",
+    "unpkg": "dist/kit.js",
+    "homepage": "https://kitjs.org",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kitmodule/kitjs.git"
+    },
+    "keywords": [
+        "kitjs",
+        "kit components",
+        "kitjs by kitmodule"
+    ],
+    "bugs": {
+        "url": "https://github.com/kitmodule/kitjs/discussions"
+    },
+    "author": "Huỳnh Nhân Quốc",
+    "license": "MIT",
+    "scripts": {
+        "build": "echo 'build step here'",
+        "prepublishOnly": "npm run build"
+    }
+}

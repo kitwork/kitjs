@@ -1,0 +1,43 @@
+{
+  "name": "@kitwork/kitjs",
+  "version": "1.0.0",
+  "description": "Not a framework. A ~15KB kernel — IR walker, bytecode-style expressions, delegated events — that makes plain HTML behave like it has one: expressions, two-way model, validation, live SSE, SPA morph. No build, no eval, no dependencies. JIT-delivered by the Kitwork engine.",
+  "license": "MIT",
+  "author": "Huỳnh Nhân Quốc (https://github.com/huynhnhanquoc)",
+  "homepage": "https://kitwork.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kitwork/kitjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kitwork/kitjs/issues"
+  },
+  "main": "dist/kitjs.js",
+  "browser": "dist/kitjs.min.js",
+  "unpkg": "dist/kitjs.min.js",
+  "jsdelivr": "dist/kitjs.min.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": true,
+  "keywords": [
+    "kitwork",
+    "jitjs",
+    "html",
+    "attributes",
+    "no-build",
+    "no-eval",
+    "csp",
+    "sse",
+    "realtime",
+    "morph",
+    "spa",
+    "validation",
+    "hypermedia",
+    "kernel",
+    "bytecode",
+    "ir"
+  ]
+}

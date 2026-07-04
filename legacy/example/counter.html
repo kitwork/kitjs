@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Counter - KitJS Example</title>
+    <script src="https://unpkg.com/@kitmodule/kitjs"></script>
+  </head>
+  <body>
+    <div data-kit-scope="counter">
+      <button data-kit-click="decrement()">-</button>
+      <span data-kit-bind="count"></span>
+      <button data-kit-click="increment()">+</button>
+    </div>
+
+    <script>
+      Kit.define("counter", {
+        count: 0,
+        increment() { this.count++ },
+        decrement() { this.count-- },
+      })
+    </script>
+  </body>
+</html>
